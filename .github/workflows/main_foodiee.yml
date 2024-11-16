@@ -54,36 +54,36 @@ jobs:
           path: release.zip
 
     deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write
+      runs-on: ubuntu-latest
+      needs: build
+      environment:
+        name: 'Production'
+        url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      permissions:
+        id-token: write
 
-    steps:
-      # Step 8: Download the artifact from the build job
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
+      steps:
+        # Step 8: Download the artifact from the build job
+        - name: Download artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: node-app
 
-      # Step 9: Unzip the artifact for deployment
-      - name: Unzip artifact
-        run: unzip release.zip
+        # Step 9: Unzip the artifact for deployment
+        - name: Unzip artifact
+          run: unzip release.zip
 
-      # Step 10: Login to Azure using the publish profile
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        # Step 10: Login to Azure using the publish profile
+        - name: Azure Login
+          uses: azure/login@v2
+          with:
+            publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 
-      # Step 11: Deploy to Azure Web App
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'foodiee'
-          slot-name: 'Production'
-          package: .
+        # Step 11: Deploy to Azure Web App
+        - name: Deploy to Azure Web App
+          id: deploy-to-webapp
+          uses: azure/webapps-deploy@v3
+          with:
+            app-name: 'foodiee'
+            slot-name: 'Production'
+            package: .
