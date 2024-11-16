@@ -24,8 +24,8 @@ jobs:
 
       # Step 3: Install and build the frontend (React)
       - name: Install and build frontend
+        working-directory: frontend-react
         run: |
-          cd frontend-react
           npm install
           npm run build
 
