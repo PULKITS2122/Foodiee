@@ -21,7 +21,7 @@ const ChatbotComponent = () => {
         return () => {
             socket.off('bot-message', handleBotMessage);
         };
-    }, []);
+    }, [handleBotMessage]);
 
     const handleBotMessage = (data) => {
         const newBotMessage = createMessage(data, "left", "Foodiee");
