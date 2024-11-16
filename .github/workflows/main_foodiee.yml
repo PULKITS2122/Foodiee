@@ -1,7 +1,6 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# GitHub Actions Workflow for deploying Node.js app with React frontend to Azure Web App
 
-name: Build and deploy Node.js app to Azure Web App - foodiee
+name: Build and Deploy Node.js App to Azure Web App - foodiee
 
 on:
   push:
@@ -14,27 +13,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - uses: actions/checkout@v4
 
+      # Step 2: Set up Node.js
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
-      - name: npm install, build, and test
+      # Step 3: Install and build the frontend (React)
+      - name: Install and build frontend
         run: |
+          cd frontend-react
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      # Step 4: Copy React build files to the backend public folder
+      - name: Copy React build to backend
+        run: |
+          cp -r frontend-react/build/* backend-socket.io/public/
 
-      - name: Upload artifact for deployment job
+      # Step 5: Install backend dependencies
+      - name: Install backend dependencies
+        run: |
+          cd backend-socket.io
+          npm install
+
+      # Step 6: Zip the backend for deployment
+      - name: Zip backend for deployment
+        run: |
+          cd backend-socket.io
+          zip -r release.zip ./*
+
+      # Step 7: Upload artifact for deployment
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: release.zip
+          path: backend-socket.io/release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -43,29 +60,30 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write
 
     steps:
-      - name: Download artifact from build job
+      # Step 8: Download the artifact from the build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
+      # Step 9: Unzip the artifact
       - name: Unzip artifact for deployment
-        run: unzip release.zip
-      
-      - name: Login to Azure
+        run: unzip backend-socket.io/release.zip
+
+      # Step 10: Login to Azure using the publish profile
+      - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3DCE0CF63C754923853C6FFF9F7A1824 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_20753463EB3745D99EA78DFFD35E9844 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DBA9E3AF3B2F43CF8F9D9F7202A51425 }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 
-      - name: 'Deploy to Azure Web App'
+      # Step 11: Deploy to Azure Web App
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'foodiee'
           slot-name: 'Production'
-          package: .
-          
+          package: backend-socket.io
