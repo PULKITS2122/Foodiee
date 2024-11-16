@@ -1,4 +1,4 @@
-name: Build and Deploy Node.js App to Azure Web App - foodiee
+name: Build and Deploy Node.js App to Azure Web App - Foodiee
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '18.x'
 
-      # Step 3: Install and build frontend
+      # Step 3: Install and build the frontend
       - name: Install and build frontend
         working-directory: frontend-react
         run: |
@@ -36,8 +36,8 @@ jobs:
 
       # Step 5: Install backend dependencies
       - name: Install backend dependencies
+        working-directory: backend-socket.io
         run: |
-          cd backend-socket.io
           npm install
 
       # Step 6: Zip the backend for deployment
@@ -46,44 +46,48 @@ jobs:
           cd backend-socket.io
           zip -r ../release.zip ./*
 
-      # Step 7: Upload artifact for deployment
+      # Step 7: Upload the artifact for deployment
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
           path: release.zip
 
-    deploy:
-      runs-on: ubuntu-latest
-      needs: build
-      environment:
-        name: 'Production'
-        url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-      permissions:
-        id-token: write
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write
 
-      steps:
-        # Step 8: Download the artifact from the build job
-        - name: Download artifact
-          uses: actions/download-artifact@v4
-          with:
-            name: node-app
+    steps:
+      # Step 8: Download the artifact from the build job
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
 
-        # Step 9: Unzip the artifact for deployment
-        - name: Unzip artifact
-          run: unzip release.zip
+      # Step 9: Unzip the artifact for deployment
+      - name: Unzip artifact
+        run: unzip release.zip
 
-        # Step 10: Login to Azure using the publish profile
-        - name: Azure Login
-          uses: azure/login@v2
-          with:
-            publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      # Step 10: Login to Azure using the publish profile
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 
-        # Step 11: Deploy to Azure Web App
-        - name: Deploy to Azure Web App
-          id: deploy-to-webapp
-          uses: azure/webapps-deploy@v3
-          with:
-            app-name: 'foodiee'
-            slot-name: 'Production'
-            package: .
+      # Step 11: Deploy to Azure Web App
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'foodiee'
+          slot-name: 'Production'
+          package: .
+
+      # Step 12: Clean up downloaded files
+      - name: Clean up
+        run: rm -rf release.zip backend-socket.io
