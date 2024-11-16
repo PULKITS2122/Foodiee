@@ -8,6 +8,7 @@ const socket = io('http://localhost:3001');
 
 const ChatbotComponent = () => {
     const [messages, setMessages] = useState([]);
+    
 
     useEffect(() => {
         const handleBotMessage = (data) => {
